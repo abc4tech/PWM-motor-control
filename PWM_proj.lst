@@ -1,0 +1,619 @@
+
+PWM_proj.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         000002a8  00000000  00000000  00000074  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .bss          00000007  00800060  00800060  0000031c  2**0
+                  ALLOC
+  2 .stab         00001170  00000000  00000000  0000031c  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  3 .stabstr      000008d2  00000000  00000000  0000148c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	12 c0       	rjmp	.+36     	; 0x26 <__ctors_end>
+   2:	3a c0       	rjmp	.+116    	; 0x78 <__vector_1>
+   4:	2b c0       	rjmp	.+86     	; 0x5c <__bad_interrupt>
+   6:	2a c0       	rjmp	.+84     	; 0x5c <__bad_interrupt>
+   8:	29 c0       	rjmp	.+82     	; 0x5c <__bad_interrupt>
+   a:	28 c0       	rjmp	.+80     	; 0x5c <__bad_interrupt>
+   c:	27 c0       	rjmp	.+78     	; 0x5c <__bad_interrupt>
+   e:	26 c0       	rjmp	.+76     	; 0x5c <__bad_interrupt>
+  10:	25 c0       	rjmp	.+74     	; 0x5c <__bad_interrupt>
+  12:	96 c0       	rjmp	.+300    	; 0x140 <__vector_9>
+  14:	23 c0       	rjmp	.+70     	; 0x5c <__bad_interrupt>
+  16:	22 c0       	rjmp	.+68     	; 0x5c <__bad_interrupt>
+  18:	21 c0       	rjmp	.+66     	; 0x5c <__bad_interrupt>
+  1a:	20 c0       	rjmp	.+64     	; 0x5c <__bad_interrupt>
+  1c:	ce c0       	rjmp	.+412    	; 0x1ba <__vector_14>
+  1e:	1e c0       	rjmp	.+60     	; 0x5c <__bad_interrupt>
+  20:	1d c0       	rjmp	.+58     	; 0x5c <__bad_interrupt>
+  22:	1c c0       	rjmp	.+56     	; 0x5c <__bad_interrupt>
+  24:	1b c0       	rjmp	.+54     	; 0x5c <__bad_interrupt>
+
+00000026 <__ctors_end>:
+  26:	11 24       	eor	r1, r1
+  28:	1f be       	out	0x3f, r1	; 63
+  2a:	cf e5       	ldi	r28, 0x5F	; 95
+  2c:	d4 e0       	ldi	r29, 0x04	; 4
+  2e:	de bf       	out	0x3e, r29	; 62
+  30:	cd bf       	out	0x3d, r28	; 61
+
+00000032 <__do_copy_data>:
+  32:	10 e0       	ldi	r17, 0x00	; 0
+  34:	a0 e6       	ldi	r26, 0x60	; 96
+  36:	b0 e0       	ldi	r27, 0x00	; 0
+  38:	e8 ea       	ldi	r30, 0xA8	; 168
+  3a:	f2 e0       	ldi	r31, 0x02	; 2
+  3c:	02 c0       	rjmp	.+4      	; 0x42 <.do_copy_data_start>
+
+0000003e <.do_copy_data_loop>:
+  3e:	05 90       	lpm	r0, Z+
+  40:	0d 92       	st	X+, r0
+
+00000042 <.do_copy_data_start>:
+  42:	a0 36       	cpi	r26, 0x60	; 96
+  44:	b1 07       	cpc	r27, r17
+  46:	d9 f7       	brne	.-10     	; 0x3e <.do_copy_data_loop>
+
+00000048 <__do_clear_bss>:
+  48:	10 e0       	ldi	r17, 0x00	; 0
+  4a:	a0 e6       	ldi	r26, 0x60	; 96
+  4c:	b0 e0       	ldi	r27, 0x00	; 0
+  4e:	01 c0       	rjmp	.+2      	; 0x52 <.do_clear_bss_start>
+
+00000050 <.do_clear_bss_loop>:
+  50:	1d 92       	st	X+, r1
+
+00000052 <.do_clear_bss_start>:
+  52:	a7 36       	cpi	r26, 0x67	; 103
+  54:	b1 07       	cpc	r27, r17
+  56:	e1 f7       	brne	.-8      	; 0x50 <.do_clear_bss_loop>
+  58:	3c d0       	rcall	.+120    	; 0xd2 <main>
+  5a:	24 c1       	rjmp	.+584    	; 0x2a4 <_exit>
+
+0000005c <__bad_interrupt>:
+  5c:	d1 cf       	rjmp	.-94     	; 0x0 <__vectors>
+
+0000005e <motor_timer_start>:
+/*
+ * Metoda pro nastaveni citace pro generovani zpozdeni
+ */
+void motor_timer_start()
+{ 
+  TIMSK |= 0x01;        // preruseni preteceni casovace 0 povoleno
+  5e:	89 b7       	in	r24, 0x39	; 57
+  60:	81 60       	ori	r24, 0x01	; 1
+  62:	89 bf       	out	0x39, r24	; 57
+  TCCR0 = 0x05;        // preddelicka 1024
+  64:	85 e0       	ldi	r24, 0x05	; 5
+  66:	83 bf       	out	0x33, r24	; 51
+  TCNT0 = 0x00;
+  68:	12 be       	out	0x32, r1	; 50
+}
+  6a:	08 95       	ret
+
+0000006c <led_pwm_init>:
+/*
+ * Metoda pro nastaveni citace pro generovani zpozdeni
+ */
+void led_pwm_init()
+{ 
+  TCCR2 = 0x19;        // CTC mode, delicka 1x
+  6c:	89 e1       	ldi	r24, 0x19	; 25
+  6e:	85 bd       	out	0x25, r24	; 37
+  OCR2 = 110;           // generuje 36kHz
+  70:	8e e6       	ldi	r24, 0x6E	; 110
+  72:	83 bd       	out	0x23, r24	; 35
+  TCNT2 = 0x00;
+  74:	14 bc       	out	0x24, r1	; 36
+}
+  76:	08 95       	ret
+
+00000078 <__vector_1>:
+
+/*
+ * Osetreni externiho preruseni od IR cidla SFH
+ */
+ISR(INT0_vect)
+{
+  78:	1f 92       	push	r1
+  7a:	0f 92       	push	r0
+  7c:	0f b6       	in	r0, 0x3f	; 63
+  7e:	0f 92       	push	r0
+  80:	11 24       	eor	r1, r1
+  82:	2f 93       	push	r18
+  84:	3f 93       	push	r19
+  86:	4f 93       	push	r20
+  88:	5f 93       	push	r21
+  8a:	6f 93       	push	r22
+  8c:	7f 93       	push	r23
+  8e:	8f 93       	push	r24
+  90:	9f 93       	push	r25
+  92:	af 93       	push	r26
+  94:	bf 93       	push	r27
+  96:	ef 93       	push	r30
+  98:	ff 93       	push	r31
+  SENSOR_OFF;
+  9a:	8b b7       	in	r24, 0x3b	; 59
+  9c:	8f 7b       	andi	r24, 0xBF	; 191
+  9e:	8b bf       	out	0x3b, r24	; 59
+  motor_start(MOTOR_0);
+  a0:	80 e0       	ldi	r24, 0x00	; 0
+  a2:	f7 d0       	rcall	.+494    	; 0x292 <motor_start>
+/*
+ * Metoda pro nastaveni citace pro generovani zpozdeni
+ */
+void motor_timer_start()
+{ 
+  TIMSK |= 0x01;        // preruseni preteceni casovace 0 povoleno
+  a4:	89 b7       	in	r24, 0x39	; 57
+  a6:	81 60       	ori	r24, 0x01	; 1
+  a8:	89 bf       	out	0x39, r24	; 57
+  TCCR0 = 0x05;        // preddelicka 1024
+  aa:	85 e0       	ldi	r24, 0x05	; 5
+  ac:	83 bf       	out	0x33, r24	; 51
+  TCNT0 = 0x00;
+  ae:	12 be       	out	0x32, r1	; 50
+ISR(INT0_vect)
+{
+  SENSOR_OFF;
+  motor_start(MOTOR_0);
+  motor_timer_start();	// spusti citac pro sepnuti vystupu a zpozdeni
+}
+  b0:	ff 91       	pop	r31
+  b2:	ef 91       	pop	r30
+  b4:	bf 91       	pop	r27
+  b6:	af 91       	pop	r26
+  b8:	9f 91       	pop	r25
+  ba:	8f 91       	pop	r24
+  bc:	7f 91       	pop	r23
+  be:	6f 91       	pop	r22
+  c0:	5f 91       	pop	r21
+  c2:	4f 91       	pop	r20
+  c4:	3f 91       	pop	r19
+  c6:	2f 91       	pop	r18
+  c8:	0f 90       	pop	r0
+  ca:	0f be       	out	0x3f, r0	; 63
+  cc:	0f 90       	pop	r0
+  ce:	1f 90       	pop	r1
+  d0:	18 95       	reti
+
+000000d2 <main>:
+
+/*
+ *  MAIN
+ */
+int main(void)
+{
+  d2:	ff 92       	push	r15
+  d4:	0f 93       	push	r16
+  d6:	1f 93       	push	r17
+  DDRB = 0x0E;	// PB0 = in, PB1 - PB3 out
+  d8:	8e e0       	ldi	r24, 0x0E	; 14
+  da:	87 bb       	out	0x17, r24	; 23
+  PORTB |= 0x01;  // nastaveni pull up rezistoru na PB0 - vstup 
+  dc:	c0 9a       	sbi	0x18, 0	; 24
+  
+  DDRD &= ~0x04;  // PD2 = in
+  de:	8a 98       	cbi	0x11, 2	; 17
+  PORTD |= 0x04;  // nastaveni pull up rezistoru na PD2 - vstup 
+  e0:	92 9a       	sbi	0x12, 2	; 18
+  
+  motor_pwm_init();
+  e2:	a4 d0       	rcall	.+328    	; 0x22c <motor_pwm_init>
+  
+  ADCSRA = 0xCB;
+  e4:	8b ec       	ldi	r24, 0xCB	; 203
+  e6:	86 b9       	out	0x06, r24	; 6
+  ADMUX = 0x60;   //  Vref Vcc
+  e8:	80 e6       	ldi	r24, 0x60	; 96
+  ea:	87 b9       	out	0x07, r24	; 7
+  
+  MCUCR |= 0x02;  // preruseni int0 na spadovou hranu
+  ec:	85 b7       	in	r24, 0x35	; 53
+  ee:	82 60       	ori	r24, 0x02	; 2
+  f0:	85 bf       	out	0x35, r24	; 53
+  
+  sei();			// globalni povoleni preruseni
+  f2:	78 94       	sei
+  
+  motor_start(MOTOR_1);
+  f4:	81 e0       	ldi	r24, 0x01	; 1
+  f6:	cd d0       	rcall	.+410    	; 0x292 <motor_start>
+/*
+ * Metoda pro nastaveni citace pro generovani zpozdeni
+ */
+void led_pwm_init()
+{ 
+  TCCR2 = 0x19;        // CTC mode, delicka 1x
+  f8:	89 e1       	ldi	r24, 0x19	; 25
+  fa:	f8 2e       	mov	r15, r24
+  OCR2 = 110;           // generuje 36kHz
+  fc:	0e e6       	ldi	r16, 0x6E	; 110
+    
+    if ((PINB & 0x01) == SENSOR_MODE && int_wait == 0) {  /* */
+      motor_stop(MOTOR_0);
+      led_pwm_init();
+      SENSOR_ON;
+      int_wait = 1;
+  fe:	11 e0       	ldi	r17, 0x01	; 1
+  
+  motor_start(MOTOR_1);
+
+  while(1) {
+    
+    if ((PINB & 0x01) == SENSOR_MODE && int_wait == 0) {  /* */
+ 100:	b0 99       	sbic	0x16, 0	; 22
+ 102:	04 c0       	rjmp	.+8      	; 0x10c <main+0x3a>
+ 104:	80 91 60 00 	lds	r24, 0x0060
+ 108:	88 23       	and	r24, r24
+ 10a:	81 f0       	breq	.+32     	; 0x12c <main+0x5a>
+      motor_stop(MOTOR_0);
+      led_pwm_init();
+      SENSOR_ON;
+      int_wait = 1;
+    }
+    else if ((PINB & 0x01) == !SENSOR_MODE){
+ 10c:	b0 9b       	sbis	0x16, 0	; 22
+ 10e:	f8 cf       	rjmp	.-16     	; 0x100 <main+0x2e>
+      SENSOR_OFF;
+ 110:	8b b7       	in	r24, 0x3b	; 59
+ 112:	8f 7b       	andi	r24, 0xBF	; 191
+ 114:	8b bf       	out	0x3b, r24	; 59
+      LED_PWM_STOP;
+ 116:	15 bc       	out	0x25, r1	; 37
+      motor_start(MOTOR_0);
+ 118:	80 e0       	ldi	r24, 0x00	; 0
+ 11a:	bb d0       	rcall	.+374    	; 0x292 <motor_start>
+      
+      int_wait = 0;
+ 11c:	10 92 60 00 	sts	0x0060, r1
+  
+  motor_start(MOTOR_1);
+
+  while(1) {
+    
+    if ((PINB & 0x01) == SENSOR_MODE && int_wait == 0) {  /* */
+ 120:	b0 99       	sbic	0x16, 0	; 22
+ 122:	f4 cf       	rjmp	.-24     	; 0x10c <main+0x3a>
+ 124:	80 91 60 00 	lds	r24, 0x0060
+ 128:	88 23       	and	r24, r24
+ 12a:	81 f7       	brne	.-32     	; 0x10c <main+0x3a>
+      motor_stop(MOTOR_0);
+ 12c:	a9 d0       	rcall	.+338    	; 0x280 <motor_stop>
+/*
+ * Metoda pro nastaveni citace pro generovani zpozdeni
+ */
+void led_pwm_init()
+{ 
+  TCCR2 = 0x19;        // CTC mode, delicka 1x
+ 12e:	f5 bc       	out	0x25, r15	; 37
+  OCR2 = 110;           // generuje 36kHz
+ 130:	03 bd       	out	0x23, r16	; 35
+  TCNT2 = 0x00;
+ 132:	14 bc       	out	0x24, r1	; 36
+  while(1) {
+    
+    if ((PINB & 0x01) == SENSOR_MODE && int_wait == 0) {  /* */
+      motor_stop(MOTOR_0);
+      led_pwm_init();
+      SENSOR_ON;
+ 134:	8b b7       	in	r24, 0x3b	; 59
+ 136:	80 64       	ori	r24, 0x40	; 64
+ 138:	8b bf       	out	0x3b, r24	; 59
+      int_wait = 1;
+ 13a:	10 93 60 00 	sts	0x0060, r17
+ 13e:	e0 cf       	rjmp	.-64     	; 0x100 <main+0x2e>
+
+00000140 <__vector_9>:
+
+/*
+ * Osetreni preruseni od citace zpozdeni
+ */
+ISR(TIMER0_OVF_vect)
+{
+ 140:	1f 92       	push	r1
+ 142:	0f 92       	push	r0
+ 144:	0f b6       	in	r0, 0x3f	; 63
+ 146:	0f 92       	push	r0
+ 148:	11 24       	eor	r1, r1
+ 14a:	2f 93       	push	r18
+ 14c:	3f 93       	push	r19
+ 14e:	4f 93       	push	r20
+ 150:	5f 93       	push	r21
+ 152:	6f 93       	push	r22
+ 154:	7f 93       	push	r23
+ 156:	8f 93       	push	r24
+ 158:	9f 93       	push	r25
+ 15a:	af 93       	push	r26
+ 15c:	bf 93       	push	r27
+ 15e:	ef 93       	push	r30
+ 160:	ff 93       	push	r31
+  static unsigned int cycle = 0;
+  
+  if (cycle++ >= adc_data[TIMER_CHANNEL] + TIMER_MIN) {
+ 162:	80 91 62 00 	lds	r24, 0x0062
+ 166:	90 91 63 00 	lds	r25, 0x0063
+ 16a:	20 91 66 00 	lds	r18, 0x0066
+ 16e:	01 96       	adiw	r24, 0x01	; 1
+ 170:	90 93 63 00 	sts	0x0063, r25
+ 174:	80 93 62 00 	sts	0x0062, r24
+ 178:	01 97       	sbiw	r24, 0x01	; 1
+ 17a:	30 e0       	ldi	r19, 0x00	; 0
+ 17c:	2f 5f       	subi	r18, 0xFF	; 255
+ 17e:	3f 4f       	sbci	r19, 0xFF	; 255
+ 180:	82 17       	cp	r24, r18
+ 182:	93 07       	cpc	r25, r19
+ 184:	48 f0       	brcs	.+18     	; 0x198 <__vector_9+0x58>
+    cycle = 0;
+ 186:	10 92 63 00 	sts	0x0063, r1
+ 18a:	10 92 62 00 	sts	0x0062, r1
+    motor_stop(MOTOR_0);
+ 18e:	80 e0       	ldi	r24, 0x00	; 0
+ 190:	77 d0       	rcall	.+238    	; 0x280 <motor_stop>
+    MOTOR_TIMER_STOP;
+ 192:	13 be       	out	0x33, r1	; 51
+    int_wait = 0;
+ 194:	10 92 60 00 	sts	0x0060, r1
+  }
+}
+ 198:	ff 91       	pop	r31
+ 19a:	ef 91       	pop	r30
+ 19c:	bf 91       	pop	r27
+ 19e:	af 91       	pop	r26
+ 1a0:	9f 91       	pop	r25
+ 1a2:	8f 91       	pop	r24
+ 1a4:	7f 91       	pop	r23
+ 1a6:	6f 91       	pop	r22
+ 1a8:	5f 91       	pop	r21
+ 1aa:	4f 91       	pop	r20
+ 1ac:	3f 91       	pop	r19
+ 1ae:	2f 91       	pop	r18
+ 1b0:	0f 90       	pop	r0
+ 1b2:	0f be       	out	0x3f, r0	; 63
+ 1b4:	0f 90       	pop	r0
+ 1b6:	1f 90       	pop	r1
+ 1b8:	18 95       	reti
+
+000001ba <__vector_14>:
+
+/*
+ * Osetreni preruseni od ADC
+ */
+ISR(ADC_vect)
+{
+ 1ba:	1f 92       	push	r1
+ 1bc:	0f 92       	push	r0
+ 1be:	0f b6       	in	r0, 0x3f	; 63
+ 1c0:	0f 92       	push	r0
+ 1c2:	11 24       	eor	r1, r1
+ 1c4:	2f 93       	push	r18
+ 1c6:	3f 93       	push	r19
+ 1c8:	4f 93       	push	r20
+ 1ca:	5f 93       	push	r21
+ 1cc:	6f 93       	push	r22
+ 1ce:	7f 93       	push	r23
+ 1d0:	8f 93       	push	r24
+ 1d2:	9f 93       	push	r25
+ 1d4:	af 93       	push	r26
+ 1d6:	bf 93       	push	r27
+ 1d8:	ef 93       	push	r30
+ 1da:	ff 93       	push	r31
+  static unsigned char channel = 0;
+  unsigned int i = 0;
+  
+  adc_data[channel] = ADCH;
+ 1dc:	e0 91 61 00 	lds	r30, 0x0061
+ 1e0:	f0 e0       	ldi	r31, 0x00	; 0
+ 1e2:	85 b1       	in	r24, 0x05	; 5
+ 1e4:	ec 59       	subi	r30, 0x9C	; 156
+ 1e6:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1e8:	80 83       	st	Z, r24
+  
+  motor_pwm_set(adc_data);
+ 1ea:	84 e6       	ldi	r24, 0x64	; 100
+ 1ec:	90 e0       	ldi	r25, 0x00	; 0
+ 1ee:	30 d0       	rcall	.+96     	; 0x250 <motor_pwm_set>
+  
+  // Select next ADC input
+  if (++channel > (LAST_ADC - FIRST_ADC))
+ 1f0:	80 91 61 00 	lds	r24, 0x0061
+ 1f4:	8f 5f       	subi	r24, 0xFF	; 255
+ 1f6:	80 93 61 00 	sts	0x0061, r24
+ 1fa:	83 30       	cpi	r24, 0x03	; 3
+ 1fc:	18 f0       	brcs	.+6      	; 0x204 <__vector_14+0x4a>
+    channel = 0;
+ 1fe:	10 92 61 00 	sts	0x0061, r1
+ 202:	80 e0       	ldi	r24, 0x00	; 0
+  
+  ADMUX = (FIRST_ADC | (ADC_VREF_TYPE & 0xff)) + channel;
+ 204:	80 5a       	subi	r24, 0xA0	; 160
+ 206:	87 b9       	out	0x07, r24	; 7
+  
+  while(i++ < 30000);
+  while(i++ < 30000);
+  
+  ADCSRA |= 0x40;
+ 208:	36 9a       	sbi	0x06, 6	; 6
+} 
+ 20a:	ff 91       	pop	r31
+ 20c:	ef 91       	pop	r30
+ 20e:	bf 91       	pop	r27
+ 210:	af 91       	pop	r26
+ 212:	9f 91       	pop	r25
+ 214:	8f 91       	pop	r24
+ 216:	7f 91       	pop	r23
+ 218:	6f 91       	pop	r22
+ 21a:	5f 91       	pop	r21
+ 21c:	4f 91       	pop	r20
+ 21e:	3f 91       	pop	r19
+ 220:	2f 91       	pop	r18
+ 222:	0f 90       	pop	r0
+ 224:	0f be       	out	0x3f, r0	; 63
+ 226:	0f 90       	pop	r0
+ 228:	1f 90       	pop	r1
+ 22a:	18 95       	reti
+
+0000022c <motor_pwm_init>:
+/*
+ * Inicializace citace 1 pro generovani dvou kanalu PWM 
+ */
+void motor_pwm_init()
+{
+  TCCR1A |= 0xf1;       // nastaveni PWM modu
+ 22c:	8f b5       	in	r24, 0x2f	; 47
+ 22e:	81 6f       	ori	r24, 0xF1	; 241
+ 230:	8f bd       	out	0x2f, r24	; 47
+  TCCR1A &= ~0x02;       // nastaveni PWM modu
+ 232:	8f b5       	in	r24, 0x2f	; 47
+ 234:	8d 7f       	andi	r24, 0xFD	; 253
+ 236:	8f bd       	out	0x2f, r24	; 47
+  TCCR1B |= 0x09;        // zdroj hodin
+ 238:	8e b5       	in	r24, 0x2e	; 46
+ 23a:	89 60       	ori	r24, 0x09	; 9
+ 23c:	8e bd       	out	0x2e, r24	; 46
+  TCCR1B &= ~0x16;        // zdroj hodin
+ 23e:	8e b5       	in	r24, 0x2e	; 46
+ 240:	89 7e       	andi	r24, 0xE9	; 233
+ 242:	8e bd       	out	0x2e, r24	; 46
+  OCR1AL = PWM_MAX;          // 
+ 244:	8c ed       	ldi	r24, 0xDC	; 220
+ 246:	8a bd       	out	0x2a, r24	; 42
+  OCR1AH = 0;         // 
+ 248:	1b bc       	out	0x2b, r1	; 43
+  OCR1BL = PWM_MAX;         // 
+ 24a:	88 bd       	out	0x28, r24	; 40
+  OCR1BH = 0;         // 
+ 24c:	19 bc       	out	0x29, r1	; 41
+}
+ 24e:	08 95       	ret
+
+00000250 <motor_pwm_set>:
+
+/*
+ * Nastaveni sirky PWM podle namerenych hodnot na potenciometrech
+ */
+void motor_pwm_set(unsigned char adc_data[])
+{
+ 250:	ac 01       	movw	r20, r24
+ 252:	20 e0       	ldi	r18, 0x00	; 0
+  unsigned char motor = 0;
+  
+  while (motor < MOTOR_1 + 1) {
+    if (PWM_MIN < adc_data[motor] && adc_data[motor] < PWM_MAX) {  
+ 254:	fa 01       	movw	r30, r20
+ 256:	e2 0f       	add	r30, r18
+ 258:	f1 1d       	adc	r31, r1
+ 25a:	e0 81       	ld	r30, Z
+ 25c:	8e 2f       	mov	r24, r30
+ 25e:	85 51       	subi	r24, 0x15	; 21
+ 260:	87 3c       	cpi	r24, 0xC7	; 199
+ 262:	38 f4       	brcc	.+14     	; 0x272 <motor_pwm_set+0x22>
+      switch (motor) {
+ 264:	22 23       	and	r18, r18
+ 266:	19 f4       	brne	.+6      	; 0x26e <motor_pwm_set+0x1e>
+        case MOTOR_0:
+          OCR1AL = adc_data[motor];
+ 268:	ea bd       	out	0x2a, r30	; 42
+ 26a:	21 e0       	ldi	r18, 0x01	; 1
+ 26c:	f3 cf       	rjmp	.-26     	; 0x254 <motor_pwm_set+0x4>
+{
+  unsigned char motor = 0;
+  
+  while (motor < MOTOR_1 + 1) {
+    if (PWM_MIN < adc_data[motor] && adc_data[motor] < PWM_MAX) {  
+      switch (motor) {
+ 26e:	21 30       	cpi	r18, 0x01	; 1
+ 270:	29 f0       	breq	.+10     	; 0x27c <motor_pwm_set+0x2c>
+ */
+void motor_pwm_set(unsigned char adc_data[])
+{
+  unsigned char motor = 0;
+  
+  while (motor < MOTOR_1 + 1) {
+ 272:	22 23       	and	r18, r18
+ 274:	11 f4       	brne	.+4      	; 0x27a <motor_pwm_set+0x2a>
+ 276:	21 e0       	ldi	r18, 0x01	; 1
+ 278:	ed cf       	rjmp	.-38     	; 0x254 <motor_pwm_set+0x4>
+ 27a:	08 95       	ret
+        case MOTOR_0:
+          OCR1AL = adc_data[motor];
+          break;
+        
+        case MOTOR_1:
+          OCR1BL = adc_data[motor];
+ 27c:	e8 bd       	out	0x28, r30	; 40
+ 27e:	08 95       	ret
+
+00000280 <motor_stop>:
+  }
+}
+
+void motor_stop(unsigned char motor)
+{
+  switch (motor) {
+ 280:	88 23       	and	r24, r24
+ 282:	11 f4       	brne	.+4      	; 0x288 <motor_stop+0x8>
+    case MOTOR_0:
+      DDRB &= ~0x02;
+ 284:	b9 98       	cbi	0x17, 1	; 23
+ 286:	08 95       	ret
+  }
+}
+
+void motor_stop(unsigned char motor)
+{
+  switch (motor) {
+ 288:	81 30       	cpi	r24, 0x01	; 1
+ 28a:	09 f0       	breq	.+2      	; 0x28e <motor_stop+0xe>
+ 28c:	08 95       	ret
+    case MOTOR_0:
+      DDRB &= ~0x02;
+      break;
+    
+    case MOTOR_1:
+      DDRB &= ~0x04;
+ 28e:	ba 98       	cbi	0x17, 2	; 23
+ 290:	08 95       	ret
+
+00000292 <motor_start>:
+  }
+}
+
+void motor_start(unsigned char motor)
+{
+  switch (motor) {
+ 292:	88 23       	and	r24, r24
+ 294:	11 f4       	brne	.+4      	; 0x29a <motor_start+0x8>
+    case MOTOR_0:
+      DDRB |= 0x02;
+ 296:	b9 9a       	sbi	0x17, 1	; 23
+ 298:	08 95       	ret
+  }
+}
+
+void motor_start(unsigned char motor)
+{
+  switch (motor) {
+ 29a:	81 30       	cpi	r24, 0x01	; 1
+ 29c:	09 f0       	breq	.+2      	; 0x2a0 <motor_start+0xe>
+ 29e:	08 95       	ret
+    case MOTOR_0:
+      DDRB |= 0x02;
+      break;
+    
+    case MOTOR_1:
+      DDRB |= 0x04;
+ 2a0:	ba 9a       	sbi	0x17, 2	; 23
+ 2a2:	08 95       	ret
+
+000002a4 <_exit>:
+ 2a4:	f8 94       	cli
+
+000002a6 <__stop_program>:
+ 2a6:	ff cf       	rjmp	.-2      	; 0x2a6 <__stop_program>
